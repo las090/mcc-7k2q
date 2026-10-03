@@ -1,0 +1,349 @@
+<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><title>My Car Care</title>
+<meta name="theme-color" content="#08090B"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@300;400;500;600&family=Noto+Sans+JP:wght@400;500&display=swap">
+<style>
+/* 計器メーター風: 夜の計器盤。黒いパネルに白い目盛り、針だけ赤。警告は計器の警告灯と同じ琥珀色 */
+:root{color-scheme:dark;
+ --bg:#08090B;--panel:#111317;--panel2:#171A1F;--ink:#ECEEF1;--mute:#868C95;--dim:#4A5059;--line:#22262C;
+ --needle:#E5483B;--warn:#E8A33D;--ok:#6FCF9E;
+ --num:"Barlow","Barlow Semi Condensed","Noto Sans JP",system-ui,sans-serif;--jp:"Noto Sans JP","Hiragino Sans","Yu Gothic",system-ui,sans-serif;
+ box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+*{box-sizing:border-box}[hidden]{display:none!important}html,body{margin:0}
+body{background:radial-gradient(120% 60% at 50% 0%,#14171C 0%,var(--bg) 60%) fixed,var(--bg);color:var(--ink);font:400 15px/1.65 var(--jp);-webkit-font-smoothing:antialiased;font-feature-settings:"palt"}
+#app{max-width:520px;margin:0 auto;padding:14px 18px 170px}
+header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+.logo{font:600 12px/1 var(--num);letter-spacing:.32em;color:var(--mute);text-transform:uppercase}
+button{font:inherit;color:inherit;border:0;background:none;cursor:pointer;-webkit-tap-highlight-color:transparent}
+button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+.ic{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;vertical-align:-3px}
+.chip{display:inline-flex;align-items:center;gap:6px;border-radius:8px;padding:7px 12px 7px 14px;border:1px solid var(--line);background:var(--panel);font-weight:500;letter-spacing:.02em}
+/* ヒーロー: 愛車写真+オドメーター */
+.hero{border-radius:12px;min-height:250px;background:var(--panel) center/cover;display:flex;align-items:flex-end;margin-bottom:14px;overflow:hidden;border:1px solid var(--line);position:relative;box-shadow:0 20px 40px -24px #000}
+.hero.np{background:linear-gradient(160deg,#1B1F25,#0E1013)}
+.hi{padding:22px;width:100%}.hi h1{margin:10px 0 0;font:500 26px/1.25 var(--jp);letter-spacing:.02em}.hi p{margin:2px 0 0;color:var(--mute);font-size:13px}
+.odo{display:flex;align-items:baseline;gap:8px;margin-top:14px}.odo em{font:600 10px/1 var(--num);letter-spacing:.24em;color:var(--mute);font-style:normal;border:1px solid var(--dim);border-radius:3px;padding:3px 5px}
+.odo b{font:300 40px/1 var(--num);letter-spacing:.02em;font-variant-numeric:tabular-nums}.odo small{font:400 15px/1 var(--num);color:var(--mute)}
+.st{display:inline-flex;align-items:center;gap:7px;font-size:12px;letter-spacing:.06em;color:var(--ink);background:#0009;border:1px solid #ffffff22;border-radius:20px;padding:3px 11px 3px 9px;backdrop-filter:blur(6px)}
+.lamp{width:7px;height:7px;border-radius:50%;background:var(--ok);box-shadow:0 0 8px var(--ok)}.lamp.w{background:var(--warn);box-shadow:0 0 8px var(--warn)}
+.phb{position:absolute;top:14px;right:14px;width:34px;height:34px;border-radius:8px;border:1px solid #ffffff30;background:#0006;backdrop-filter:blur(6px);display:grid;place-items:center}
+/* メーター */
+.gauges{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
+.gg{position:relative;background:linear-gradient(180deg,var(--panel2),var(--panel));border:1px solid var(--line);border-radius:12px;padding:12px 10px 14px;text-align:center}
+.gg svg{width:100%;max-width:170px;display:block;margin:0 auto}
+.gt{fill:none;stroke:var(--line);stroke-width:2.5}.gv{fill:none;stroke:var(--ink);stroke-width:2.5;stroke-linecap:round}.gg.w .gv{stroke:var(--warn)}
+.tk{stroke:var(--dim);stroke-width:1.2}.tk.M{stroke:var(--mute)}.nd{stroke:var(--needle);stroke-width:3;stroke-linecap:round;filter:drop-shadow(0 0 3px #E5483B88)}.hub{fill:var(--panel2);stroke:var(--needle);stroke-width:1.5}
+.gc{position:absolute;left:0;right:0;top:36%;pointer-events:none}
+.gc small{display:block;font:600 9px/1 var(--num);letter-spacing:.26em;color:var(--mute)}
+.gc b{display:block;font:300 26px/1.1 var(--num);margin-top:4px;font-variant-numeric:tabular-nums}.gc b i{font-style:normal;font-size:12px;color:var(--mute);margin-left:2px}
+.gl{font-size:12px;color:var(--mute);margin-top:-6px;letter-spacing:.04em}.gg.w .gl{color:var(--warn)}
+/* カード・読み出し */
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+.card{background:linear-gradient(180deg,var(--panel2),var(--panel) 60%);border-radius:12px;padding:18px 20px;margin-bottom:12px;border:1px solid var(--line)}.grid .card{margin:0}
+.card h3{margin:0 0 8px;font-size:12px;font-weight:500;color:var(--mute);letter-spacing:.08em}
+.lb{color:var(--mute);font-size:12px;letter-spacing:.06em}.big{font:400 21px/1.3 var(--num);margin-top:4px;font-variant-numeric:tabular-nums;letter-spacing:.01em}
+.td{display:flex;gap:12px;align-items:center;padding:12px 0;border-top:1px solid var(--line)}.td:first-of-type{border:0;padding-top:4px}.td.w{color:var(--warn)}
+.td .lamp{flex:none;background:var(--dim);box-shadow:none}.td.w .lamp{background:var(--warn);box-shadow:0 0 8px var(--warn)}
+h2{margin:2px 0 16px;font-size:18px;font-weight:500;letter-spacing:.02em}
+.sec{display:flex;align-items:center;gap:10px;margin:26px 2px 12px;font-size:12px;font-weight:500;letter-spacing:.14em;color:var(--mute)}.sec::after{content:"";flex:1;height:1px;background:var(--line)}
+.pill{display:inline-block;border-radius:4px;padding:1px 8px;font-size:11px;border:1px solid var(--line);color:var(--mute);margin-right:8px;letter-spacing:.04em;vertical-align:1px}.pill.on{border-color:var(--ok);color:var(--ok)}
+.row{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}.row>*{min-width:0}.row small,.sm{color:var(--mute);font-size:13px}
+.amt{font:400 16px/1.4 var(--num);font-variant-numeric:tabular-nums;white-space:nowrap}
+.x{color:var(--mute);padding:6px;border-radius:6px}.x:hover{color:var(--ink);background:var(--panel2)}
+.acts{display:flex;justify-content:flex-end;gap:2px;margin-top:2px}
+.ghost{border:1px solid var(--line);border-radius:8px;padding:7px 14px;font-size:13px;margin-top:10px;background:transparent}
+.chips{display:flex;gap:6px;overflow-x:auto;margin-bottom:14px;padding-bottom:4px;scrollbar-width:none}.chips button{flex:none;border:1px solid var(--line);border-radius:20px;padding:6px 15px;background:transparent;color:var(--mute);font-size:13px}.chips .on{border-color:var(--ink);color:var(--ink);background:var(--panel2)}
+.bar{height:3px;background:var(--line);margin:6px 0 12px;border-radius:2px;overflow:hidden}.bar i{display:block;height:100%;background:var(--ink);border-radius:2px}
+nav{position:fixed;left:0;right:0;bottom:0;display:flex;justify-content:center;background:#08090BEE;backdrop-filter:blur(12px);border-top:1px solid var(--line);padding:6px 0 calc(8px + env(safe-area-inset-bottom,0px));z-index:5}
+nav button{flex:1;max-width:170px;padding:10px 8px 6px;color:var(--mute);font-size:12px;letter-spacing:.06em;position:relative;display:flex;flex-direction:column;align-items:center;gap:3px}
+nav button .ic{width:21px;height:21px}nav .on{color:var(--ink)}nav .on::before{content:"";position:absolute;top:-7px;left:50%;width:22px;height:2px;margin-left:-11px;background:var(--needle);border-radius:2px}
+#fab{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(84px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--bg);border-radius:28px;padding:13px 24px 13px 20px;font-weight:600;letter-spacing:.04em;z-index:5;display:flex;align-items:center;gap:8px;box-shadow:0 10px 30px -8px #000}
+.bd{position:fixed;inset:0;background:#000b;backdrop-filter:blur(2px);z-index:9}
+.pn{position:fixed;left:0;right:0;bottom:0;max-height:88%;overflow:auto;background:var(--panel);border-top:1px solid var(--line);border-radius:16px 16px 0 0;padding:26px 20px calc(28px + env(safe-area-inset-bottom,0px));z-index:10;max-width:520px;margin:0 auto}
+.pn::before{content:"";display:block;width:36px;height:4px;border-radius:2px;background:var(--dim);margin:-14px auto 16px}
+label{display:block;font-size:12px;color:var(--mute);margin-bottom:14px;letter-spacing:.04em}
+input,select,textarea{display:block;width:100%;margin-top:6px;padding:12px 13px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font:inherit;font-size:16px}
+input:focus,select:focus,textarea:focus{border-color:var(--mute);outline:none}
+.pri{width:100%;background:var(--ink);color:var(--bg);border-radius:10px;padding:14px;font-weight:600;margin-top:8px;letter-spacing:.04em;display:flex;align-items:center;justify-content:center;gap:8px}
+.pri.alt{background:var(--panel2);color:var(--ink);border:1px solid var(--line)}
+.pk{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}.pk button{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:16px 6px 13px;font-size:13px;display:flex;flex-direction:column;align-items:center;gap:8px}.pk .ic{width:24px;height:24px;stroke-width:1.4}
+.vr{display:flex;gap:10px;align-items:center;padding:16px;border:1px solid var(--line);border-radius:10px;margin-bottom:8px;background:var(--panel2)}.vr.on{border-color:var(--ink)}.vr span{font-weight:500}.vr small{flex:1;color:var(--mute)}.vr a{color:var(--mute);font-size:12px;border-bottom:1px solid var(--mute)}
+details summary{cursor:pointer}
+@media (prefers-reduced-motion:no-preference){.nd{transition:transform .9s cubic-bezier(.2,.8,.2,1)}}
+</style></head><body>
+<div id="app"></div><button id="fab" onclick="pick()">＋ 記録する</button><div id="sh"></div>
+<nav><button data-t="home" onclick="go('home')">ホーム</button><button data-t="karte" onclick="go('karte')">カルテ</button><button data-t="money" onclick="go('money')">お金</button></nav>
+<script>
+const $=i=>document.getElementById(i),uid=()=>Math.random().toString(36).slice(2,9);
+const e=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const iso=d=>new Date(d.getTime()-d.getTimezoneOffset()*6e4).toISOString().slice(0,10),today=()=>iso(new Date());
+const yen=n=>'¥'+Math.round(n||0).toLocaleString('ja-JP'),num=n=>(n||0).toLocaleString('ja-JP');
+const dd=(a,b)=>Math.round((new Date(b)-new Date(a))/864e5),dur=d=>{const m=Math.floor(d/30.44);return m?`${m}ヶ月${Math.round(d-m*30.44)}日`:`${d}日`};
+let S=null;try{S=JSON.parse(localStorage.getItem('mcc3'))}catch(x){}
+S=S||{activeVehicleId:null,vehicles:[]};
+const save=()=>{try{localStorage.setItem('mcc3',JSON.stringify(S))}catch(x){}};
+const cur=()=>S.vehicles.find(v=>v.id===S.activeVehicleId)||S.vehicles[0];
+let tab='home',flt='all',ph=null;
+const num_=['num'];
+const FORMS={
+maintenance:{n:'メンテナンス',cat:'メンテナンス',f:[['item','項目','sel',['オイル交換','オイルフィルター','バッテリー','ワイパー','ブレーキ','エアフィルター','点検・法定整備','その他']],['date','日付','date'],['odo','走行距離(km)','num'],['amount','費用(円)','num'],['memo','メモ','text']]},
+tire:{n:'タイヤ',cat:'メンテナンス',f:[['kind','種別','sel',['夏タイヤ','スタッドレス','オールシーズンタイヤ']],['name','名前(任意)','text'],['mountDate','装着日','date'],['mountOdo','装着時の走行距離(km)','num'],['status','状態','sel',['装着中','保管中']],['removeDate','取り外し日','date'],['removeOdo','取り外し時の走行距離(km)','num'],['amount','費用(円)','num'],['memo','メモ','text']]},
+fuel:{n:'ガソリン',cat:'ガソリン',f:[['fuelType','油種','sel',['レギュラー','ハイオク','軽油']],['date','日付','date'],['odo','走行距離(km)','num'],['liters','給油量(L)','num'],['price','単価(円/L)','num'],['amount','金額(円)','num'],['memo','メモ','text']]},
+etc:{n:'ETC・高速料金',cat:'ETC・高速料金',f:[['kind','種類','sel',['高速道路','有料道路','フェリー・その他']],['date','日付','date'],['amount','料金(円)','num'],['memo','区間','text']]},
+custom:{n:'カスタム',cat:'カスタム',f:[['part','部位','sel',['外装','内装','オーディオ','足回り','吸排気','その他']],['name','内容','text'],['date','日付','date'],['amount','費用(円)','num'],['memo','メモ','text']]},
+other:{n:'その他',cat:'その他',f:[['title','タイトル','text'],['date','日付','date'],['amount','費用(円)','num'],['memo','メモ','text']]},
+fixed:{n:'固定費',f:[['category','種類','sel',['税金','車検','保険','駐車場','その他']],['date','日付','date'],['amount','費用(円)','num'],['memo','メモ','text']]}};
+const IC={
+ wrench:'<path d="M14.7 6.3a4 4 0 0 0-5.4 5.2L3.6 17.2a1.6 1.6 0 0 0 2.3 2.3l5.7-5.7a4 4 0 0 0 5.2-5.4l-2.4 2.4-2.1-.6-.6-2.1z"/>',
+ tire:'<circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="3.2"/><path d="M12 3.5v5.3M12 15.2v5.3M3.5 12h5.3M15.2 12h5.3"/>',
+ fuel:'<path d="M4 20V5a1.5 1.5 0 0 1 1.5-1.5h7A1.5 1.5 0 0 1 14 5v15M3 20h12M6.5 8h5M14 10h2a1.5 1.5 0 0 1 1.5 1.5V16a1.5 1.5 0 0 0 3 0V8.5L18 6"/>',
+ road:'<path d="M8 3 4 21M16 3l4 18M12 4v2.5M12 10.5v3M12 17.5V20"/>',
+ spark:'<path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8zM19 16l.7 2 2 .7-2 .7-.7 2-.7-2-2-.7 2-.7z"/>',
+ note:'<path d="M6 3.5h9l4 4V20a.5.5 0 0 1-.5.5h-12A.5.5 0 0 1 6 20zM14.5 3.5V8H19M9 12h7M9 15.5h7"/>',
+ receipt:'<path d="M6 3h12v18l-2.5-1.5L13 21l-2.5-1.5L8 21l-2-1.2zM9 8h6M9 11.5h6M9 15h4"/>',
+ camera:'<path d="M4 7.5h3l1.5-2h7l1.5 2h3a1 1 0 0 1 1 1V18a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V8.5a1 1 0 0 1 1-1z"/><circle cx="12" cy="13" r="3.5"/>',
+ image:'<rect x="3.5" y="4.5" width="17" height="15" rx="1.5"/><circle cx="9" cy="10" r="1.6"/><path d="m4 18 5-5 3.5 3.5L15 14l5 4.5"/>',
+ home:'<path d="M3.5 11 12 4l8.5 7M6 9.5V20h12V9.5"/>',
+ doc:'<path d="M6 3.5h12V20.5H6zM9 8h6M9 11.5h6M9 15h4"/>',
+ coin:'<circle cx="12" cy="12" r="8.5"/><path d="M9 8l3 4 3-4M12 12v5M9.5 13h5M9.5 15.5h5"/>',
+ share:'<path d="M12 15V4M8 8l4-4 4 4M5 13v6.5h14V13"/>',
+ edit:'<path d="M4 20h4L19 9l-4-4L4 16zM13.5 6.5l4 4"/>',
+ x:'<path d="M6 6l12 12M18 6 6 18"/>',
+ plus:'<path d="M12 5v14M5 12h14"/>',
+ chev:'<path d="m7 10 5 5 5-5"/>',
+ gauge:'<path d="M4 16a8 8 0 1 1 16 0M12 16l4-5"/>'};
+const ic=(n,c)=>`<svg class="ic${c?' '+c:''}" viewBox="0 0 24 24" aria-hidden="true">${IC[n]}</svg>`;
+const ICON={maintenance:'wrench',tire:'tire',fuel:'fuel',etc:'road',custom:'spark',other:'note',fixed:'receipt'};
+function ti(t,v){const rm=t.status==='保管中'&&t.removeDate,end=rm?t.removeDate:today();
+ const d=(t.mountDate?dd(t.mountDate,end):0)+(t.pastDays||0);
+ const eo=t.status==='保管中'&&t.removeOdo!=null?t.removeOdo:v.odo,k=t.mountOdo!=null?Math.max(0,eo-t.mountOdo)+(t.pastKm||0):null;return{d,k}}
+const mountedList=v=>v.records.tire.filter(t=>t.status==='装着中').sort((a,b)=>(a.mountDate||'').localeCompare(b.mountDate||''));
+const oilRem=v=>v.lastOilOdo!=null?(v.oilInterval||5000)-(v.odo-v.lastOilOdo):null;
+const shk=v=>v.shaken?dd(today(),v.shaken):null;
+const monthCost=v=>v.costs.filter(c=>(c.date||'').startsWith(today().slice(0,7))).reduce((a,c)=>a+c.amount,0);
+function todos(v){const T=[],r=oilRem(v),s=shk(v),mnt=mountedList(v),mo=new Date().getMonth()+1;
+ if(r==null)T.push({t:'オイル交換を記録して、目安を表示しましょう'});else if(r<=0)T.push({t:'オイル交換の時期です',w:1});else if(r<1000)T.push({t:`あと${num(r)}kmでオイル交換`,w:1});
+ if(s==null)T.push({t:'車検満了日を登録しましょう'});else if(s<0)T.push({t:'車検の期限が切れています',w:1});else if(s<=60)T.push({t:`車検まであと${s}日`,w:1});
+ if(!mnt.length)T.push({t:'今のタイヤを記録しましょう'});else{mnt.forEach(m=>{const d=ti(m,v).d,lb=m.name?`${m.kind}「${m.name}」`:m.kind;
+  if(d>1095)T.push({t:`${lb}は${dur(d)}使用中。状態を点検しましょう`,w:1})});
+  const ks=new Set(mnt.map(x=>x.kind));
+  if(ks.has('夏タイヤ')&&(mo>=11||mo<=2))T.push({t:'冬用タイヤへの交換を検討しましょう'});
+  if(ks.has('スタッドレス')&&mo>=4&&mo<=5)T.push({t:'夏タイヤへの交換を検討しましょう'})}
+ return T.length?T:[{t:'今のところ、やることはありません'}]}
+const RT=(r,k)=>k==='maintenance'?r.item:k==='fuel'?`給油${r.fuelType?' '+r.fuelType:''} ${r.liters||'—'}L`:k==='etc'?r.kind:k==='custom'?`${r.part} ${r.name||''}`:k==='tire'?(r.name?`${r.kind}「${r.name}」`:r.kind):r.title;
+const costLabel=(v,c)=>{for(const k in v.records){const r=v.records[k].find(x=>x.id===c.ref);if(r)return RT(r,k)}return c.memo||''};
+const hd=v=>`<header><span class=logo>My Car Care</span><button class=chip onclick="vsheet()">${e(v.name)}${ic('chev')}</button></header>`;
+const mini=(l,x)=>`<div class=card><div class=lb>${l}</div><div class=big>${x}</div></div>`;
+function tireMini(v){const mnt=mountedList(v);
+ if(!mnt.length)return`<div class=card><div class=lb>タイヤ使用期間</div><div class=big>未登録</div></div>`;
+ return`<div class=card><div class=lb>タイヤ使用期間</div>${mnt.map(m=>{const i=ti(m,v);return`<div class=big style="font-size:16px;margin-top:6px">${dur(i.d)}${i.k!=null?`<span class=sm>　${num(i.k)}km</span>`:''}<div class=sm>${e(m.kind)}${m.name?`　${e(m.name)}`:''}${m.mountDate?`　${e(m.mountDate)}〜`:''}</div></div>`}).join('')}</div>`}
+/* 計器メーター: frac=残り割合(0〜1)。針は残りが減るほど左へ倒れる */
+function gauge(label,eng,val,unit,frac,warn){const R=40,C=2*Math.PI*R,A=C*.75,f=frac==null?null:Math.max(0,Math.min(1,frac));
+ let tk='';for(let k=0;k<=10;k++){const a=(135+27*k)*Math.PI/180,r1=k%5?44:43,r2=48;tk+=`<line class="tk${k%5?'':' M'}" x1="${50+r1*Math.cos(a)}" y1="${50+r1*Math.sin(a)}" x2="${50+r2*Math.cos(a)}" y2="${50+r2*Math.sin(a)}"/>`}
+ const na=135+270*(f??0);
+ return`<div class="gg${warn?' w':''}"><svg viewBox="0 0 100 92" role="img" aria-label="${label} ${val}${unit}"><circle cx=50 cy=50 r=${R} class=gt stroke-dasharray="${A} ${C}" transform="rotate(135 50 50)"/>${f!=null?`<circle cx=50 cy=50 r=${R} class=gv stroke-dasharray="${A*f} ${C}" transform="rotate(135 50 50)"/>`:''}${tk}${f!=null?`<g class=nd style="transform-origin:50px 50px;transform:rotate(${na}deg)"><line class=nd x1=78 y1=50 x2=94 y2=50 /><circle class=hub cx=90 cy=50 r=0 /></g>`:''}</svg>
+<div class=gc><small>${eng}</small><b>${val}${unit?`<i>${unit}</i>`:''}</b></div><div class=gl>${label}</div></div>`}
+function home(v){const T=todos(v),r=oilRem(v),s=shk(v),bad=T.some(x=>x.w),iv=v.oilInterval||5000;
+ const oil=r==null?gauge('オイル交換まで','OIL','—','',null):gauge(r<=0?'オイル交換の時期です':'オイル交換まで','OIL',r<=0?'0':num(r),'km',r/iv,r<1000);
+ const ins=s==null?gauge('車検まで','INSPECTION','—','',null):gauge(s<0?'車検の期限切れ':'車検まで','INSPECTION',s<0?'0':String(s),'日',s/730,s<=60);
+ return hd(v)+`<input id=hp type=file accept="image/*" hidden onchange="hpic(this)"><div class="hero${v.photo?'':' np'}" style="${v.photo?`background-image:linear-gradient(180deg,#0000 30%,#000c),url('${v.photo}')`:''}"><button class=phb aria-label="写真を変更" onclick="$('hp').click()">${ic('plus')}</button><div class=hi><span class=st><i class="lamp${bad?' w':''}"></i>${bad?'要確認あり':'良好'}</span><h1>${e(v.name)}</h1><p>${e(v.model)}${v.year?`　${e(v.year)}年式`:''}</p><div class=odo><em>ODO</em><b>${num(v.odo)}</b><small>km</small></div></div></div>
+<div class=gauges>${oil}${ins}</div>
+<div class=grid>${tireMini(v)}${mini('今月の費用',yen(monthCost(v)))}</div>
+<div class=card><h3>次にやること</h3>${T.map(x=>`<div class="td ${x.w?'w':''}"><i class=lamp></i><span>${e(x.t)}</span></div>`).join('')}</div>`}
+function tireCard(t,v){const i=ti(t,v);return `<div class=card><div class=row><div><span class="pill ${t.status==='装着中'?'on':''}">${t.status}</span><b>${e(t.name)||t.kind}</b></div><div class=acts style="margin:-6px -6px 0 0"><button class=x aria-label="編集" onclick="openForm('tire','${t.id}')">${ic('edit')}</button><button class=x aria-label="削除" onclick="del('${t.id}')">${ic('x')}</button></div></div>
+<div class=sm style="margin-top:8px">使用 ${dur(i.d)}${i.k!=null?`／${num(i.k)}km`:''}　装着 ${e(t.mountDate)||'—'}${t.removeDate?`　取り外し ${e(t.removeDate)}`:''}</div>${t.memo?`<div class=sm>${e(t.memo)}</div>`:''}
+<button class=ghost onclick="tog('${t.id}')">${t.status==='装着中'?'外して保管中にする':'装着する'}</button></div>`}
+function karte(v){const s=shk(v),tl=[];
+ ['maintenance','fuel','etc','custom','other'].forEach(k=>(v.records[k]||[]).forEach(r=>tl.push({...r,k})));tl.sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+ const L=tl.filter(r=>flt==='all'||r.k===flt),ttl=r=>RT(r,r.k);
+ const tk=k=>v.records.tire.filter(x=>x.kind===k),t=k=>tk(k).map(x=>tireCard(x,v)).join('');
+ const tireSecs=['夏タイヤ','スタッドレス','オールシーズンタイヤ'].filter(k=>tk(k).length).map(k=>`<div class=sec>${k}</div>${t(k)}`).join('');
+ return hd(v)+`<div class=card><div class=row><div><div class=lb>車検満了日</div><div class=big>${e(v.shaken)||'未登録'}</div><div class=sm>${s==null?'':s<0?'期限切れ':`あと${s}日`}</div></div><button class=ghost onclick="ev('${v.id}')">編集</button></div></div>
+${tireSecs}<div class=sec>履歴</div>
+<div class=chips>${[['all','すべて'],['maintenance','整備'],['fuel','給油'],['etc','ETC'],['custom','カスタム'],['other','その他']].map(([k,l])=>`<button class="${flt===k?'on':''}" onclick="flt='${k}';render()">${l}</button>`).join('')}</div>
+${L.map(r=>`<div class=card style="padding:14px 18px"><div class=row><div><span class=pill>${FORMS[r.k].n}</span><b>${e(ttl(r))}</b><div class=sm>${e(r.date)}${r.odo!=null?`　${num(r.odo)}km`:''}${r.memo?`　${e(r.memo)}`:''}</div></div><div style="text-align:right"><div class=amt>${r.amount?yen(r.amount):''}</div><div class=acts><button class=x aria-label="SNSに投稿" onclick="post('${r.id}')">${ic('share')}</button><button class=x aria-label="編集" onclick="openForm('${r.k}','${r.id}')">${ic('edit')}</button><button class=x aria-label="削除" onclick="del('${r.id}')">${ic('x')}</button></div></div></div></div>`).join('')||'<div class="card sm">まだ記録がありません。「＋ 記録する」から追加できます</div>'}`}
+let mMode='month',mY=+today().slice(0,4),mM=+today().slice(5,7);
+const ym=(y,m)=>`${y}-${String(m).padStart(2,'0')}`,sumOf=a=>a.reduce((t,c)=>t+(c.amount||0),0);
+const costsIn=(v,pre)=>v.costs.filter(c=>(c.date||'').startsWith(pre));
+function breakdown(list){const by={};list.forEach(c=>by[c.category]=(by[c.category]||0)+c.amount);const rows=Object.entries(by).sort((a,b)=>b[1]-a[1]),mx=rows[0]?rows[0][1]:1;
+ return rows.map(([c,a])=>`<div class=row><span>${e(c)}</span><span>${yen(a)}</span></div><div class=bar><i style="width:${a/mx*100}%"></i></div>`).join('')||'<span class=sm>この期間の費用はまだありません</span>'}
+const costRow=(v,c)=>`<div class=card style="padding:12px 18px"><div class=row><div><span class=pill>${e(c.category)}</span><span class=sm>${e(c.date)} ${e(costLabel(v,c))}</span></div><div style="text-align:right"><div class=amt>${yen(c.amount)}</div><div class=acts><button class=x aria-label="編集" onclick="editCost('${c.id}')">${ic('edit')}</button><button class=x aria-label="削除" onclick="del('${c.id}')">${ic('x')}</button></div></div></div></div>`;
+function mv(d){if(mMode==='year')mY+=d;else{mM+=d;if(mM>12){mM=1;mY++}if(mM<1){mM=12;mY--}}render()}
+const toMonth=m=>{mMode='month';mM=m;render()};
+function money(v){const nav_=t=>`<div class=row style="align-items:center;margin-bottom:14px"><button class=chip onclick="mv(-1)">‹</button><b style="font-weight:500;font-size:17px">${t}</b><button class=chip onclick="mv(1)">›</button></div>`;
+ const sw_=`<div class=chips>${[['month','月別'],['year','年別']].map(([k,l])=>`<button class="${mMode===k?'on':''}" onclick="mMode='${k}';render()">${l}</button>`).join('')}</div>`;
+ const sorted=a=>[...a].sort((x,y)=>(y.date||'').localeCompare(x.date||''));
+ if(mMode==='month'){const L=costsIn(v,ym(mY,mM)),tot=sumOf(L),pm=mM===1?ym(mY-1,12):ym(mY,mM-1),pt=sumOf(costsIn(v,pm)),df=tot-pt;
+  return hd(v)+sw_+nav_(`${mY}年${mM}月`)+`<div class=grid>${mini('この月の合計',yen(tot))}${mini('前の月とくらべて',pt||tot?(df>=0?'+':'−')+yen(Math.abs(df)):'—')}</div>
+<div class=card><h3>内訳</h3>${breakdown(L)}</div><div class=sec>この月の費用 ${L.length}件</div>${sorted(L).map(c=>costRow(v,c)).join('')||'<div class="card sm">記録はありません</div>'}`}
+ const L=costsIn(v,String(mY)),tot=sumOf(L),cy=+today().slice(0,4),months=mY===cy?+today().slice(5,7):mY<cy?12:1;
+ const ms=Array.from({length:12},(_,i)=>sumOf(costsIn(v,ym(mY,i+1)))),mx=Math.max(...ms,1);
+ const chart=`<div class=card><h3>月ごとの費用</h3><div style="display:flex;align-items:flex-end;gap:2px;height:130px;margin-top:8px">${ms.map((a,i)=>`<button title="${i+1}月 ${yen(a)}" onclick="toMonth(${i+1})" style="flex:1;height:100%;display:flex;flex-direction:column;justify-content:flex-end;padding:0"><i style="display:block;height:${a?Math.max(3,a/mx*100):0}%;background:${mY===cy&&i+1===+today().slice(5,7)?'var(--ink)':'var(--mute)'};border-radius:4px 4px 0 0"></i></button>`).join('')}</div>
+<div style="display:flex;gap:2px;border-top:1px solid var(--line);padding-top:4px">${ms.map((_,i)=>`<span class=sm style="flex:1;text-align:center;font-size:10px">${i+1}</span>`).join('')}</div><div class=sm style="margin-top:6px">棒をタップすると、その月の内訳を見られます</div></div>`;
+ const cmp=S.vehicles.length>1?(()=>{const vs=S.vehicles.map(x=>[x.name,sumOf(costsIn(x,String(mY)))]),m2=Math.max(...vs.map(x=>x[1]),1);
+  return`<div class=card><h3>車ごとの比較（${mY}年）</h3>${vs.map(([n,a])=>`<div class=row><span>${e(n)}</span><span>${yen(a)}</span></div><div class=bar><i style="width:${a/m2*100}%"></i></div>`).join('')}</div>`})():'';
+ return hd(v)+sw_+nav_(`${mY}年`)+`<div class=grid>${mini('年間の合計',yen(tot))}${mini('1ヶ月あたり',yen(tot/months))}</div>${chart}<div class=card><h3>内訳</h3>${breakdown(L)}</div>${cmp}`}
+const welcome=()=>`<header><span class=logo>My Car Care</span></header><div class=card style="text-align:center;padding:36px 22px"><h2>はじめましょう</h2><p class=sm>最初の1台を登録すると、状態と次にやることが見えてきます</p><button class=pri onclick="ev()">愛車を登録する</button></div>`;
+function render(){const v=cur();$('app').innerHTML=!v?welcome():tab==='home'?home(v):tab==='karte'?karte(v):money(v);
+ document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.t===tab));$('fab').style.display=v?'block':'none'}
+const go=t=>{tab=t;scrollTo(0,0);render()};
+const sheet=h=>$('sh').innerHTML=`<div class=bd onclick=cl()></div><div class=pn>${h}</div>`,cl=()=>{$('sh').innerHTML='';ocr=null};
+function pick(){const ks=['maintenance','tire','fuel','etc','custom','other'];if(tab==='money')ks.push('fixed');
+ ocr=null;warmOcr();sheet(`<h2>何を記録しますか？</h2><div class=lb>レシート・明細から読み取る</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:6px 0 18px"><button class=pri style="margin:0" onclick="$('ocrc').click()">${ic('camera')}カメラで撮る</button><button class="pri alt" style="margin:0" onclick="$('ocrf').click()">${ic('image')}写真から選ぶ</button></div><p class=sm style="margin:-10px 0 18px">レシートを平らにして、画面いっぱいに明るく撮ると読み取りやすくなります</p><input id=ocrc type=file accept="image/*" capture=environment hidden onchange="ocrStart(this)"><input id=ocrf type=file accept="image/*" hidden onchange="ocrStart(this)"><div class=pk>${ks.map(k=>`<button onclick="openForm('${k}')">${ic(ICON[k])}${FORMS[k].n}</button>`).join('')}</div>`)}
+function findRec(v,id){for(const k in v.records){const r=v.records[k].find(x=>x.id===id);if(r)return{r,k}}return null}
+function openForm(k,id,pre){pre=pre||{};const v=cur();if(k==='fuel'&&!id&&pre.fuelType==null){const lf=[...v.records.fuel].sort((a,b)=>(b.date||'').localeCompare(a.date||''))[0];if(lf&&lf.fuelType)pre={...pre,fuelType:lf.fuelType}}const d=FORMS[k],ed=id?(k==='fixed'?v.costs.find(c=>c.id===id):findRec(v,id)?.r):null;
+ const def=n=>ed?(ed[n]??''):pre[n]!=null?pre[n]:['date','mountDate'].includes(n)?today():['odo','mountOdo'].includes(n)?v.odo??'':'';
+ sheet(`<h2>${d.n}を${ed?'編集':'記録'}</h2>${!ed&&ocr?ocrHead(k):''}`+d.f.map(([n,l,t,o])=>`<label>${l}${t==='sel'?`<select id=f_${n}>${o.map(x=>`<option ${(ed?ed[n]:pre[n])===x?'selected':''}>${x}</option>`).join('')}</select>`:`<input id=f_${n} type="${t==='num'?'number':t}" ${t==='num'?'inputmode=decimal step=any':''} value="${e(def(n))}">`}</label>`).join('')+`<button class=pri onclick="saveRec('${k}','${ed?id:''}')">保存する</button>`);if(k==='fuel')fuelCalc()}
+/* 給油量か単価を変えたら、金額を 給油量×単価 で自動計算(あとから手で直すこともできる) */
+function fuelCalc(){['f_liters','f_price'].forEach(i=>$(i).oninput=()=>{const l=+$('f_liters').value,p=+$('f_price').value;if(l>0&&p>0)$('f_amount').value=Math.round(l*p)})}
+function editCost(id){const v=cur(),c=v.costs.find(x=>x.id===id);if(!c)return;const f=c.ref&&findRec(v,c.ref);f?openForm(f.k,f.r.id):openForm('fixed',id)}
+/* ===== レシート読み取り(OCR) — 端末内で処理。初回だけ読み取り用データをダウンロード ===== */
+let ocr=null;
+const ocrMeta=()=>ocr?{source:'ocr',attachments:[{type:'receipt',image:ocr.thumb,ocrText:ocr.text,readAt:today()}],lineItems:ocr.items}:{};
+/* 読み取り用ファイルはページと同じ場所の ocr/ フォルダーから読む(速く・確実)。日本語データ jpn.traineddata.gz は公開できる形式に合わせて jpn-data.wasm という名前で置く。ファイルを直接開いたときだけネットから */
+const OCR_LOCAL=location.protocol!=='file:',OCR_B=OCR_LOCAL?new URL('ocr/',location.href).href:'';
+const OCR_P=OCR_LOCAL?{js:OCR_B+'tesseract.min.js',workerPath:OCR_B+'worker.min.js',corePath:OCR_B,langPath:OCR_B}:{js:'https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js',workerPath:'https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/worker.min.js',corePath:'https://cdn.jsdelivr.net/npm/tesseract.js-core@5.1.1',langPath:'https://cdn.jsdelivr.net/npm/@tesseract.js-data/jpn/4.0.0_best_int'};
+/* 日本語データを読み取りエンジンの保存場所(端末内)に入れておく。2回目以降はダウンロードしない */
+function seedLang(){return new Promise((ok,ng)=>{let q;try{q=indexedDB.open('keyval-store')}catch(x){return ok()}
+ q.onupgradeneeded=()=>q.result.createObjectStore('keyval');q.onerror=()=>ok();
+ q.onsuccess=()=>{const db=q.result,K='./jpn.traineddata';if(!db.objectStoreNames.contains('keyval')){db.close();return ok()}
+  const g=db.transaction('keyval').objectStore('keyval').get(K);
+  g.onsuccess=()=>{if(g.result){db.close();return ok()}
+   fetch(OCR_B+'jpn-data.wasm').then(r=>{if(!r.ok)throw new Error('load');return r.arrayBuffer()}).then(b=>{const t=db.transaction('keyval','readwrite');t.objectStore('keyval').put(new Uint8Array(b),K);t.oncomplete=()=>{db.close();ok()};t.onerror=()=>{db.close();ok()}}).catch(ng)};
+  g.onerror=()=>{db.close();ok()}}})}
+function loadTess(){return window.Tesseract?Promise.resolve():new Promise((ok,ng)=>{const s=document.createElement('script');s.src=OCR_P.js;s.onload=ok;s.onerror=()=>ng(new Error('load'));document.head.appendChild(s)})}
+function shrink(f,max,gray,q){return new Promise((ok,ng)=>{const im=new Image();im.onload=()=>{const s=Math.min(1,max/Math.max(im.width,im.height)),c=document.createElement('canvas');c.width=im.width*s;c.height=im.height*s;const x=c.getContext('2d');if(gray)x.filter='grayscale(1) contrast(1.4)';x.drawImage(im,0,0,c.width,c.height);ok(c.toDataURL('image/jpeg',q))};im.onerror=ng;im.src=URL.createObjectURL(f)})}
+let ocrRun=false,tw=null,twP=null,ocrLog=null;
+/* 読み取りエンジンは1回だけ準備して使い回す。記録シートを開いた時点で裏で準備を始める */
+function getWorker(){if(tw)return Promise.resolve(tw);
+ if(!twP)twP=loadTess().then(()=>OCR_LOCAL?seedLang():0).then(()=>Tesseract.createWorker('jpn',1,{workerPath:OCR_P.workerPath,corePath:OCR_P.corePath,langPath:OCR_P.langPath,logger:m=>ocrLog&&ocrLog(m)})).then(w=>w.setParameters({tessedit_pageseg_mode:'6'}).then(()=>tw=w)).catch(x=>{twP=null;throw x});return twP}
+const warmOcr=()=>{getWorker().catch(()=>{})};
+const timeout=(pr,ms)=>Promise.race([pr,new Promise((_,ng)=>setTimeout(()=>ng(new Error('timeout')),ms))]);
+async function ocrStart(inp){const f=inp.files[0];inp.value='';if(!f)return;ocrRun=false;const t0=Date.now();
+ sheet(`<h2>読み取り中…</h2><p class=sm id=ocrm>${tw?'文字を読み取っています…':'読み取りの準備をしています(初回だけ時間がかかります)'}</p><div class=bar><i id=ocrb style="width:3%"></i></div><p class=sm id=ocrt></p>`);
+ const tick=setInterval(()=>{const el=$('ocrt');if(el)el.textContent=Math.round((Date.now()-t0)/1000)+'秒'},1000);
+ ocrLog=m=>{const b=$('ocrb'),t=$('ocrm');if(!b)return;
+  if(m.status==='recognizing text'){ocrRun=true;b.style.width=Math.round(40+m.progress*60)+'%';t.textContent='文字を読み取っています…'}
+  else if(/load|download/i.test(m.status)){b.style.width=Math.round(3+(m.progress||0)*37)+'%';t.textContent='読み取り用データを準備中(初回のみ・次回からは速くなります)'}};
+ try{const big=await shrink(f,2000,true,.85),thumb=await shrink(f,480,false,.55);
+  const w=await timeout(getWorker(),90000);const r=await timeout(w.recognize(big),90000);
+  const p=parseReceipt(r.data.text);ocr={text:r.data.text,thumb,items:p.items,pre:p.pre,k:p.k};openForm(p.k,null,p.pre)}
+ catch(x){sheet(`<h2>読み取れませんでした</h2><p class=sm>${x.message==='timeout'&&!ocrRun?'準備に時間がかかりすぎたため止めました。電波の良い場所(Wi-Fiなど)でもう一度お試しください。一度準備できれば、次からは速くなります。':x.message==='load'||!ocrRun?'読み取り機能を準備できませんでした。初回はインターネット接続が必要です。電波の良い場所でもう一度お試しください。それでも出る場合は、この開き方では読み取りが使えない可能性があります。':'写真が暗い・斜め・ピンぼけだと読み取りにくくなります。レシート全体を明るく正面から撮り直してみてください。'}</p><button class=pri onclick="pick()">記録の種類を選んで手で入力する</button>`)}
+ finally{clearInterval(tick);ocrLog=null}}
+function ocrHead(k){const ks=['maintenance','tire','fuel','etc','custom','other','fixed'];
+ return`<div class=card style="padding:14px 16px"><div class=sm>${ic('receipt')} レシートから読み取りました。内容を確認・修正してから保存してください</div>
+<div class=chips style="margin:10px 0 0">${ks.map(x=>`<button class="${x===k?'on':''}" onclick="openForm('${x}',null,ocr.pre)">${FORMS[x].n}</button>`).join('')}</div>
+<details style="margin-top:8px"><summary class=sm>読み取った文字とレシートを見る</summary>${ocr.thumb?`<img src="${ocr.thumb}" style="width:100%;margin-top:8px;border-radius:3px">`:''}<pre class=sm style="white-space:pre-wrap;margin:8px 0 0">${e(ocr.text)}</pre></details></div>`}
+function parseReceipt(raw){
+ const z=raw.replace(/[０-９]/g,c=>String.fromCharCode(c.charCodeAt(0)-65248)).replace(/[，、]/g,',').replace(/[．]/g,'.').replace(/[￥\\]/g,'¥');
+ const L=z.split('\n').map(l=>l.replace(/[ 　]+/g,'')
+  .replace(/[Yy¥]+(?=\d)/g,'¥').replace(/-[半羊]+(?=\d)/g,'-¥')                       // 「¥」を Y と読み間違える
+  .replace(/(\d)[oO](?=\d|$)/g,'$10').replace(/(\d)B(?=\d)/g,'$18') // 数字の中の O→0, B→8
+  .replace(/(?<![\d.])(\d{1,3})\.(\d{3})(?![\d])/g,'$1,$2') // 「5.364」→「5,364」(桁区切りのコンマを点と読み間違える)
+ ).filter(Boolean),T=L.join('\n'),pre={},has=re=>re.test(T);
+ const toN=x=>+x.replace(/,/g,''),nums=l=>(l.match(/\d{1,3}(?:,\d{3})+|\d+/g)||[]).map(toN).filter(n=>n>=10&&n<10000000);
+ // 日付
+ let m=T.match(/(20\d{2})[年\/.\-](\d{1,2})[月\/.\-](\d{1,2})/)||null,y,mo,d;
+ if(m)[y,mo,d]=[+m[1],+m[2],+m[3]];else if(m=T.match(/(?:令和|R)(\d{1,2})[年\/.](\d{1,2})[月\/.](\d{1,2})/))[y,mo,d]=[2018+ +m[1],+m[2],+m[3]];
+ else if(m=T.match(/(?<!\d)(\d{2})[\/.](\d{1,2})[\/.](\d{1,2})(?!\d)/))[y,mo,d]=[2000+ +m[1],+m[2],+m[3]];
+ if(y&&mo>=1&&mo<=12&&d>=1&&d<=31){const s=`${y}-${String(mo).padStart(2,'0')}-${String(d).padStart(2,'0')}`;if(s<=today())pre.date=pre.mountDate=s}
+ // 合計金額
+ const skip=/預|釣|お釣|ポイント|小計|税率|対象|内税|消費税|TEL|電話|No|番号/i;
+ let amt=null;for(const re of[/合.?計|総合計|現計|お買上|お買い上げ|お支払|ご請求|請求額|領収金額|総額/,/\d+%対象/,/金額|クレジット|現金/]){const c=L.filter(l=>re.test(l)&&!/小計/.test(l)).flatMap(nums);if(c.length){amt=Math.max(...c);break}}
+ if(amt==null){const c=L.filter(l=>/¥|円/.test(l)&&!skip.test(l)).flatMap(nums);if(c.length)amt=Math.max(...c)}
+ if(amt!=null)pre.amount=amt;
+ // 給油量・走行距離
+ if(m=T.match(/(\d{1,3}\.\d{1,2})\s*(?:L|ℓ|リットル)/i))pre.liters=+m[1];
+ // 単価(円/L): 「単価172」「@172」「172円/L」など。80〜400円の範囲だけを単価とみなす
+ for(const re of[/単価[^\d]{0,4}(\d{2,3}(?:\.\d{1,2})?)/,/[@＠](\d{2,3}(?:\.\d{1,2})?)/,/(\d{2,3}(?:\.\d{1,2})?)円?\/(?:L|ℓ)/i]){const mm=T.match(re);if(mm&&+mm[1]>=80&&+mm[1]<=400){pre.price=+mm[1];break}}
+ // 給油: 金額は 給油量×単価 に近い数字を選ぶ。見つからなければ計算した金額を使う
+ if(pre.liters&&pre.price){const ex=Math.round(pre.liters*pre.price),all=L.flatMap(nums).filter(n=>Math.abs(n-ex)<=ex*.06);
+  pre.amount=all.length?all.sort((a,b)=>Math.abs(a-ex)-Math.abs(b-ex))[0]:ex}
+ else if(pre.liters&&pre.amount&&pre.amount<500){pre.price=pre.amount;pre.amount=Math.round(pre.liters*pre.price)}
+ if(m=T.match(/(?:走行距離|走行|ODO|メーター)[^\d]{0,4}(\d{1,3}(?:,\d{3})+|\d{3,7})/i))pre.odo=toN(m[1]);
+ // 明細(品名+金額)
+ const items=L.filter(l=>!skip.test(l)&&!/合計|お預|釣/.test(l)).map(l=>{const mm=l.match(/^(.*?[^\d¥,\s].*?)[¥]?(\d{1,3}(?:,\d{3})+|\d{2,7})円?[※*外内軽]?$/);return mm&&mm[1].length>=2&&!/^\d/.test(mm[1])?{name:mm[1].replace(/[¥:：]+$/,''),amount:toN(mm[2])}:null}).filter(Boolean).slice(0,20);
+ // 種類の判定
+ let k='other';
+ if(has(/ETC|高速|NEXCO|ネクスコ|首都高|阪神高速|料金所|IC[〜~-]/i)){k='etc';pre.kind=has(/フェリー/)?'フェリー・その他':has(/有料道路/)?'有料道路':'高速道路'}
+ else if(has(/タイヤ|スタッドレス/)){k='tire';pre.kind=has(/スタッドレス/)?'スタッドレス':has(/オールシーズン/)?'オールシーズンタイヤ':'夏タイヤ'}
+ else if(has(/オイル|エレメント|バッテリー|ワイパー|ブレーキ|パッド|エアフィルター|エアクリーナー|点検|整備|車検/)){k='maintenance';
+  pre.item=has(/オイル交換|エンジンオイル|オイル(?!フィルター|エレメント)/)?'オイル交換':has(/エレメント|オイルフィルター/)?'オイルフィルター':has(/バッテリー/)?'バッテリー':has(/ワイパー/)?'ワイパー':has(/ブレーキ|パッド/)?'ブレーキ':has(/エアフィルター|エアクリーナー/)?'エアフィルター':'点検・法定整備'}
+ else if(has(/レギュラー|ハイオク|軽油|ガソリン|給油|揮発油/))k='fuel';
+ else if(has(/駐車/)){k='fixed';pre.category='駐車場'}
+ else if(has(/保険/)){k='fixed';pre.category='保険'}
+ else if(has(/自動車税|軽自動車税|重量税/)){k='fixed';pre.category='税金'}
+ if(k==='other'&&items[0])pre.title=items[0].name;
+ if(k==='fuel'){
+  pre.fuelType=has(/ハイオク|ハイオタ|プレミアム|ハイオ/)?'ハイオク':has(/軽油|ディーゼル|軽注/)?'軽油':has(/レギュラー|レギユラー|レギュラ|ギュラー/)?'レギュラー':undefined;
+  // 給油量×単価≒金額 になる組み合わせを探す(どれか1つを読み間違えても、他の2つから正しい値を選べる)
+  const tot=/合.?計|現計|お支払|ご請求|請求額|領収|総額|クレジット|金額/;
+  const Ls=[...new Set((T.match(/\d{1,3}\.\d{2}/g)||[]).map(Number))].filter(x=>x>=2&&x<=150);
+  const Ps=[...new Set(L.flatMap(l=>(l.match(/\d{2,3}(?:\.\d{1,2})?/g)||[]).map(Number)))].filter(x=>x>=80&&x<=400);
+  const As=L.flatMap(l=>nums(l).map(n=>({n,t:tot.test(l)&&!/小計|税/.test(l)}))).filter(o=>o.n>=200);
+  let best=null;for(const a of As)for(const pp of Ps)for(const l of Ls){const er=Math.abs(l*pp-a.n)/a.n;if(er<.015){const sc=er-(a.t?.01:0);if(!best||sc<best.sc)best={sc,a:a.n,p:pp,l}}}
+  // 値引き(クーポン・会員値引など)。行の最後の数字を値引額とみなす
+  const dl=L.find(l=>/値引|割引|クーポン|ｸｰﾎﾟﾝ|ク-ポン/.test(l)),dn=dl?nums(dl):[],disc=dn.length?dn[dn.length-1]:0;
+  if(best){pre.price=best.p;pre.liters=best.l;pre.amount=best.a;
+   if(disc>0&&disc<best.a*.2){pre.amount=best.a-disc;pre.memo=`値引 ¥${disc.toLocaleString('ja-JP')}`}
+   else{const t2=L.filter(l=>/合.?計|現計|お支払|ご請求|請求額|領収|総額|\d+%対象/.test(l)&&!/小計|内消費/.test(l)).flatMap(nums).filter(n=>n<best.a&&n>=best.a*.85);
+    if(t2.length){pre.amount=Math.max(...t2);pre.memo=`値引 ¥${(best.a-pre.amount).toLocaleString('ja-JP')}`}}}
+  else if(pre.price&&!pre.liters){const g=L.flatMap(nums).filter(n=>n>=500&&n<=50000).map(n=>({n,l:n/pre.price})).filter(o=>o.l>=2&&o.l<=150);
+   const tl=(pre.amount||0)+disc;const c=g.find(o=>o.n===tl)||g.find(o=>Math.abs(o.n-tl)<=1);if(c){pre.liters=Math.round(c.l*100)/100;if(disc&&pre.amount===c.n){pre.amount=c.n-disc;pre.memo=`値引 ¥${disc.toLocaleString('ja-JP')}`}}else if(pre.amount>=200)pre.liters=Math.round(pre.amount/pre.price*100)/100}
+  else if(pre.price&&pre.amount>=200&&!pre.liters)pre.liters=Math.round(pre.amount/pre.price*100)/100;
+  else if(pre.price&&pre.liters&&!(pre.amount>=200))pre.amount=Math.round(pre.liters*pre.price)}
+ return{k,pre,items}}
+const recalcOil=v=>{const o=v.records.maintenance.filter(m=>m.item==='オイル交換'&&m.odo!=null).map(m=>m.odo);v.lastOilOdo=o.length?Math.max(...o):null};
+function saveRec(k,id){const v=cur(),d=FORMS[k],r={};
+ d.f.forEach(([n,l,t])=>{const x=$('f_'+n).value;r[n]=t==='num'?(x===''?null:+x):x});
+ if(k==='fixed'){const c={date:r.date||today(),category:r.category,amount:r.amount||0,memo:r.memo},o=id&&v.costs.find(x=>x.id===id);o?Object.assign(o,c):v.costs.push({id:uid(),...c,...ocrMeta()})}
+ else{let rec=id&&v.records[k].find(x=>x.id===id),wasOn=rec&&rec.status==='装着中';
+  if(rec)Object.assign(rec,r);else{rec={id:uid(),...r,source:'manual',attachments:[],lineItems:[],...ocrMeta()};if(k==='tire'){rec.pastDays=0;rec.pastKm=0}v.records[k].push(rec)}
+  const dt=rec.date||rec.mountDate||today(),cc=v.costs.find(c=>c.ref===rec.id);
+  if(rec.amount>0){const c={date:dt,category:d.cat,amount:rec.amount,memo:RT(rec,k),ref:rec.id};cc?Object.assign(cc,c):v.costs.push({id:uid(),...c})}
+  else if(cc)v.costs=v.costs.filter(c=>c!==cc);
+  const o=rec.odo??rec.mountOdo;if(o>(v.odo||0))v.odo=o;
+  if(k==='maintenance')recalcOil(v);
+  if(k==='tire'&&rec.status==='装着中'&&!wasOn)unmountOthers(v,rec)}
+ save();cl();render()}
+function unmountOthers(v,t){v.records.tire.forEach(x=>{if(x.id!==t.id&&x.kind!==t.kind&&x.status==='装着中'){x.status='保管中';x.removeDate=t.mountDate||today();x.removeOdo=v.odo}})}
+let askFn=null;
+function ask(t,sub,f,ok){askFn=f;sheet(`<h2>${e(t)}</h2>${sub?`<p class=sm>${e(sub)}</p>`:''}<button class=pri style="background:var(--warn)" onclick="const f=askFn;cl();f()">${ok||'削除する'}</button><button class=ghost style="width:100%;margin-top:10px;text-align:center" onclick="cl()">やめる</button>`)}
+function del(id){ask('この記録を削除しますか？','',()=>{const v=cur();Object.keys(v.records).forEach(k=>v.records[k]=v.records[k].filter(r=>r.id!==id));v.costs=v.costs.filter(c=>c.id!==id&&c.ref!==id);recalcOil(v);save();render()})}
+function tog(id){const v=cur(),t=v.records.tire.find(x=>x.id===id),i=ti(t,v);
+ if(t.status==='装着中'){t.status='保管中';t.removeDate=today();t.removeOdo=v.odo}
+ else{t.pastDays=i.d;t.pastKm=i.k||0;t.status='装着中';t.mountDate=today();t.mountOdo=v.odo;t.removeDate='';t.removeOdo=null;unmountOthers(v,t)}
+ save();render()}
+function vsheet(){sheet(`<h2>愛車を選ぶ</h2>`+S.vehicles.map(x=>`<div class="vr ${x.id===cur().id?'on':''}" onclick="sw('${x.id}')"><span>${e(x.name)}</span><small>${e(x.model)}</small><a onclick="event.stopPropagation();ev('${x.id}')">編集</a></div>`).join('')+`<button class=pri onclick="ev()">${ic('plus')}車を追加</button><button class=ghost style="width:100%;margin-top:14px;text-align:center" onclick="backup()">データを書き出す(バックアップ)</button><input id=rf type=file accept="application/json" hidden onchange="restore(this)"><button class=ghost style="width:100%;margin-top:8px;text-align:center" onclick="$('rf').click()">データを読み込む(ファイルから)</button><details style="margin-top:10px"><summary class=sm>コピーしたデータを貼り付けて復元する</summary><textarea id=rt rows=3 placeholder="ここに貼り付け"></textarea><button class=ghost style="width:100%;text-align:center" onclick="restoreText()">貼り付けたデータで復元する</button></details>`)}
+function backup(){sheet(`<h2>データを書き出す</h2><p class=sm>下の文字がすべてのデータです。「コピーする」を押して、メモアプリなどに貼り付けて保存してください。</p><textarea id=bk rows=5 readonly>${e(JSON.stringify(S))}</textarea><button class=pri onclick="cpy('bk','bkm')">コピーする</button><button class=ghost style="width:100%;margin-top:10px;text-align:center" onclick="bkFile()">ファイルとして保存(使えない環境もあります)</button><p class=sm id=bkm></p>`)}
+function bkFile(){try{const b=new Blob([JSON.stringify(S)],{type:'application/json'}),u=URL.createObjectURL(b),a=document.createElement('a');a.href=u;a.download='mycarcare_'+today()+'.json';a.click();setTimeout(()=>URL.revokeObjectURL(u),2000)}catch(x){}}
+async function cpy(src,msg){try{await navigator.clipboard.writeText($(src).value);$(msg).textContent='コピーしました'}catch(x){$(src).select();$(msg).textContent='文字を選択しました。長押しでコピーしてください'}}
+function restoreText(){const t=$('rt').value.trim();if(t)applyRestore(t)}
+function applyRestore(t){try{const d=JSON.parse(t);if(!d||!Array.isArray(d.vehicles))throw 0;
+ d.vehicles.forEach(v=>{if(!v||typeof v!=='object'||!v.id)throw 0;v.name=v.name||'名前なし';v.records=v.records||{};['maintenance','tire','fuel','etc','custom','other'].forEach(k=>{if(!Array.isArray(v.records[k]))v.records[k]=[]});if(!Array.isArray(v.costs))v.costs=[];v.odo=+v.odo||0});ask('今のデータを置き換えて復元しますか？','元に戻せません',()=>{S=d;save();render()},'復元する')}catch(x){sheet(`<h2>読み込めませんでした</h2><p class=sm>書き出したデータを、最初から最後まで欠けずに貼り付けているか確認してください。</p><button class=pri onclick="cl()">閉じる</button>`)}}
+function restore(i){const f=i.files[0];if(!f)return;const r=new FileReader();r.onload=()=>applyRestore(r.result);r.readAsText(f)}
+const sw=id=>{S.activeVehicleId=id;save();cl();render()};
+function ev(id){const x=S.vehicles.find(v=>v.id===id)||{};ph=x.photo||null;
+ const F=[['name','車名','text',x.name],['model','型式','text',x.model],['year','年式','number',x.year],['odo','現在の走行距離(km)','number',x.odo],['shaken','車検満了日','date',x.shaken],['oil','オイル交換の目安(km)','number',x.oilInterval??5000]];
+ sheet(`<h2>${id?'車の情報':'車を追加'}</h2>`+F.map(([k,l,t,val])=>`<label>${l}<input id=v_${k} type=${t} value="${e(val??'')}"></label>`).join('')+`<div class=lb>写真</div><input id=vp type=file accept="image/*" hidden onchange="pic(this,()=>$('vpl').textContent='写真を選びました')"><button class=ghost style="margin:6px 0 16px" onclick="$('vp').click()"><span id=vpl>${ph?'写真を変更する':'写真を選ぶ'}</span></button><p id=v_err class=sm style="color:var(--warn);margin:0"></p><button class=pri onclick="sv('${id||''}')">保存する</button>${id?`<button class=ghost style="width:100%;margin-top:18px;text-align:center;color:var(--warn)" onclick="dv('${id}')">この車を削除する</button>`:''}`)}
+function dv(id){const x=S.vehicles.find(v=>v.id===id);if(!x)return;ask(`「${x.name}」を削除しますか？`,'この車のすべての記録も消えます。元に戻せません',()=>{
+ S.vehicles=S.vehicles.filter(v=>v.id!==id);if(S.activeVehicleId===id)S.activeVehicleId=S.vehicles[0]?S.vehicles[0].id:null;save();render()})}
+function pic(i,cb){const f=i.files[0];if(!f)return;const im=new Image();im.onload=()=>{const s=Math.min(1,720/im.width),c=document.createElement('canvas');c.width=im.width*s;c.height=im.height*s;c.getContext('2d').drawImage(im,0,0,c.width,c.height);ph=c.toDataURL('image/jpeg',.72);if(cb)cb()};im.src=URL.createObjectURL(f)}
+const hpic=i=>pic(i,()=>{cur().photo=ph;save();render()});
+function sv(id){const g=k=>$('v_'+k).value;if(!g('name').trim()){$('v_err').textContent='車名を入力してください';$('v_name').focus();return}
+ const d={name:g('name').trim(),model:g('model'),year:g('year'),odo:+g('odo')||0,shaken:g('shaken'),oilInterval:+g('oil')||5000,photo:ph};
+ let v=S.vehicles.find(x=>x.id===id);
+ if(v)Object.assign(v,d);else{v={id:uid(),lastOilOdo:null,records:{maintenance:[],tire:[],fuel:[],etc:[],custom:[],other:[]},costs:[],...d};S.vehicles.push(v)}
+ S.activeVehicleId=v.id;save();cl();render()}
+const PL={maintenance:'🔧 メンテナンス',fuel:'⛽ 給油',etc:'🛣️ 高速',custom:'✨ カスタム',other:'📝 記録',tire:'🛞 タイヤ'};
+function post(id){const v=cur();let r,k;for(const q in v.records){const f=v.records[q].find(x=>x.id===id);if(f){r=f;k=q}}
+ const t=`${PL[k]}\n${v.name}：${RT(r,k)}\n${r.odo!=null?num(r.odo)+'km　':''}${r.date||''}\n#愛車 #${v.name.replace(/\s/g,'')}`;
+ sheet(`<h2>SNSに投稿</h2><label>投稿文（自由に編集できます）<textarea id=pt rows=5 oninput=xUpd()>${e(t)}</textarea></label><a class=pri id=xa target=_blank rel=noopener style="display:block;text-align:center;text-decoration:none;box-sizing:border-box">Xで投稿</a><button class=pri style="background:var(--card);color:var(--ink);border:1px solid var(--line)" onclick="shareIt()">写真つきで共有（Instagramなど）</button><p class=sm id=pst>金額は投稿文に入れていません</p>`);xUpd()}
+const xUrl=()=>'https://x.com/intent/post?text='+encodeURIComponent($('pt').value),xUpd=()=>$('xa').href=xUrl();
+async function shareIt(){const t=$('pt').value,v=cur();try{const o={text:t};
+ if(v.photo){const b=atob(v.photo.split(',')[1]),u=new Uint8Array(b.length);for(let i=0;i<b.length;i++)u[i]=b.charCodeAt(i);const f=new File([u],'car.jpg',{type:'image/jpeg'});if(navigator.canShare&&navigator.canShare({files:[f]}))o.files=[f]}
+ await navigator.share(o)}catch(x){if(x.name==='AbortError')return;try{await navigator.clipboard.writeText(t);$('pst').textContent='投稿文をコピーしました。SNSアプリに貼り付けてください'}catch(y){$('pt').select()}}}
+$('fab').innerHTML=ic('plus')+'記録する';
+document.querySelectorAll('nav button').forEach(b=>b.innerHTML=ic({home:'home',karte:'doc',money:'coin'}[b.dataset.t])+b.textContent);
+render();
+if('serviceWorker' in navigator&&location.protocol==='https:')navigator.serviceWorker.register('sw.js').catch(()=>{});
+</script></body></html>
