@@ -35,7 +35,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 .gc{position:absolute;left:0;right:0;top:36%;pointer-events:none}
 .gc small{display:block;font:600 9px/1 var(--num);letter-spacing:.26em;color:var(--mute)}
 .gc b{display:block;font:300 26px/1.1 var(--num);margin-top:4px;font-variant-numeric:tabular-nums}.gc b i{font-style:normal;font-size:12px;color:var(--mute);margin-left:2px}
-.gl{font-size:12px;color:var(--mute);margin-top:-6px;letter-spacing:.04em}.gg.w .gl{color:var(--warn)}
+.gl{font-size:12px;color:var(--mute);margin-top:-6px;letter-spacing:.04em}.gs{font-size:10.5px;color:var(--dim);margin-top:3px;line-height:1.4}.gg.w .gl{color:var(--warn)}
 /* カード・読み出し */
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
 .card{background:linear-gradient(180deg,var(--panel2),var(--panel) 60%);border-radius:12px;padding:18px 20px;margin-bottom:12px;border:1px solid var(--line)}.grid .card{margin:0}
@@ -137,13 +137,13 @@ function tireMini(v){const mnt=mountedList(v);
  if(!mnt.length)return`<div class=card><div class=lb>タイヤ使用期間</div><div class=big>未登録</div></div>`;
  return`<div class=card><div class=lb>タイヤ使用期間</div>${mnt.map(m=>{const i=ti(m,v);return`<div class=big style="font-size:16px;margin-top:6px">${dur(i.d)}${i.k!=null?`<span class=sm>　${num(i.k)}km</span>`:''}<div class=sm>${e(m.kind)}${m.name?`　${e(m.name)}`:''}${m.mountDate?`　${e(m.mountDate)}〜`:''}</div></div>`}).join('')}</div>`}
 /* 計器メーター: frac=残り割合(0〜1)。針は残りが減るほど左へ倒れる */
-function gauge(label,eng,val,unit,frac,warn){const R=40,C=2*Math.PI*R,A=C*.75,f=frac==null?null:Math.max(0,Math.min(1,frac));
+function gauge(label,eng,val,unit,frac,warn,sub){const R=40,C=2*Math.PI*R,A=C*.75,f=frac==null?null:Math.max(0,Math.min(1,frac));
  let tk='';for(let k=0;k<=10;k++){const a=(135+27*k)*Math.PI/180,r1=k%5?44:43,r2=48;tk+=`<line class="tk${k%5?'':' M'}" x1="${50+r1*Math.cos(a)}" y1="${50+r1*Math.sin(a)}" x2="${50+r2*Math.cos(a)}" y2="${50+r2*Math.sin(a)}"/>`}
  const na=135+270*(f??0);
- return`<div class="gg${warn?' w':''}"><svg viewBox="0 0 100 92" role="img" aria-label="${label} ${val}${unit}"><circle cx=50 cy=50 r=${R} class=gt stroke-dasharray="${A} ${C}" transform="rotate(135 50 50)"/>${f!=null?`<circle cx=50 cy=50 r=${R} class=gv stroke-dasharray="${A*f} ${C}" transform="rotate(135 50 50)"/>`:''}${tk}${f!=null?`<g class=nd style="transform-origin:50px 50px;transform:rotate(${na}deg)"><line class=nd x1=78 y1=50 x2=94 y2=50 /><circle class=hub cx=90 cy=50 r=0 /></g>`:''}</svg>
-<div class=gc><small>${eng}</small><b>${val}${unit?`<i>${unit}</i>`:''}</b></div><div class=gl>${label}</div></div>`}
+ return`<div class="gg${warn?' w':''}"><svg viewBox="0 0 100 92" role="img" aria-label="${label} ${val}${unit}"><circle cx=50 cy=50 r=${R} class=gt stroke-dasharray="${A} ${C}" transform="rotate(135 50 50)"/>${f!=null?`<circle cx=50 cy=50 r=${R} class=gv stroke-dasharray="${A*f} ${C}" transform="rotate(135 50 50)"/>`:''}${tk}${f!=null?`<g class=nd style="transform-origin:50px 50px;transform:rotate(${na}deg)"><line class=nd x1=84 y1=50 x2=97 y2=50 /><circle class=hub cx=90 cy=50 r=0 /></g>`:''}</svg>
+<div class=gc><small>${eng}</small><b>${val}${unit?`<i>${unit}</i>`:''}</b></div><div class=gl>${label}</div>${sub?`<div class=gs>${sub}</div>`:''}</div>`}
 function home(v){const T=todos(v),r=oilRem(v),s=shk(v),bad=T.some(x=>x.w),iv=v.oilInterval||5000;
- const oil=r==null?gauge('オイル交換まで','OIL','—','',null):gauge(r<=0?'オイル交換の時期です':'オイル交換まで','OIL',r<=0?'0':num(r),'km',r/iv,r<1000);
+ const oil=r==null?gauge('オイル交換まで','OIL','—','',null,false,'記録か車の情報で前回の距離を入れてください'):gauge(r<=0?'オイル交換の時期です':'オイル交換まで','OIL',r<=0?'0':num(r),'km',r/iv,r<1000,`前回 ${num(v.lastOilOdo)}km<br>${num(iv)}kmごとに交換`);
  const ins=s==null?gauge('車検まで','INSPECTION','—','',null):gauge(s<0?'車検の期限切れ':'車検まで','INSPECTION',s<0?'0':String(s),'日',s/730,s<=60);
  return hd(v)+`<input id=hp type=file accept="image/*" hidden onchange="hpic(this)"><div class="hero${v.photo?'':' np'}" style="${v.photo?`background-image:linear-gradient(180deg,#0000 30%,#000c),url('${v.photo}')`:''}"><button class=phb aria-label="写真を変更" onclick="$('hp').click()">${ic('plus')}</button><div class=hi><span class=st><i class="lamp${bad?' w':''}"></i>${bad?'要確認あり':'良好'}</span><h1>${e(v.name)}</h1><p>${e(v.model)}${v.year?`　${e(v.year)}年式`:''}</p><div class=odo><em>ODO</em><b>${num(v.odo)}</b><small>km</small></div></div></div>
 <div class=gauges>${oil}${ins}</div>
@@ -187,7 +187,7 @@ function render(){const v=cur();$('app').innerHTML=!v?welcome():tab==='home'?hom
  document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.t===tab));$('fab').style.display=v?'block':'none'}
 const go=t=>{tab=t;scrollTo(0,0);render()};
 const sheet=h=>$('sh').innerHTML=`<div class=bd onclick=cl()></div><div class=pn>${h}</div>`,cl=()=>{$('sh').innerHTML='';ocr=null};
-function pick(){const ks=['maintenance','tire','fuel','etc','custom','other'];if(tab==='money')ks.push('fixed');
+function pick(){const ks=['maintenance','tire','fuel','etc','custom','other','fixed'];
  ocr=null;warmOcr();sheet(`<h2>何を記録しますか？</h2><div class=lb>レシート・明細から読み取る</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:6px 0 18px"><button class=pri style="margin:0" onclick="$('ocrc').click()">${ic('camera')}カメラで撮る</button><button class="pri alt" style="margin:0" onclick="$('ocrf').click()">${ic('image')}写真から選ぶ</button></div><p class=sm style="margin:-10px 0 18px">レシートを平らにして、画面いっぱいに明るく撮ると読み取りやすくなります</p><input id=ocrc type=file accept="image/*" capture=environment hidden onchange="ocrStart(this)"><input id=ocrf type=file accept="image/*" hidden onchange="ocrStart(this)"><div class=pk>${ks.map(k=>`<button onclick="openForm('${k}')">${ic(ICON[k])}${FORMS[k].n}</button>`).join('')}</div>`)}
 function findRec(v,id){for(const k in v.records){const r=v.records[k].find(x=>x.id===id);if(r)return{r,k}}return null}
 function openForm(k,id,pre){pre=pre||{};const v=cur();if(k==='fuel'&&!id&&pre.fuelType==null){const lf=[...v.records.fuel].sort((a,b)=>(b.date||'').localeCompare(a.date||''))[0];if(lf&&lf.fuelType)pre={...pre,fuelType:lf.fuelType}}const d=FORMS[k],ed=id?(k==='fixed'?v.costs.find(c=>c.id===id):findRec(v,id)?.r):null;
@@ -292,12 +292,14 @@ function parseReceipt(raw){
   else if(pre.price&&pre.amount>=200&&!pre.liters)pre.liters=Math.round(pre.amount/pre.price*100)/100;
   else if(pre.price&&pre.liters&&!(pre.amount>=200))pre.amount=Math.round(pre.liters*pre.price)}
  return{k,pre,items}}
-const recalcOil=v=>{const o=v.records.maintenance.filter(m=>m.item==='オイル交換'&&m.odo!=null).map(m=>m.odo);v.lastOilOdo=o.length?Math.max(...o):null};
+/* 前回のオイル交換時の走行距離 = オイル交換の記録と、車の情報で入れた値のうち一番新しい(大きい)もの */
+const recalcOil=v=>{const o=v.records.maintenance.filter(m=>m.item==='オイル交換'&&m.odo!=null).map(m=>m.odo);if(v.oilBaseOdo!=null)o.push(v.oilBaseOdo);v.lastOilOdo=o.length?Math.max(...o):null};
 function saveRec(k,id){const v=cur(),d=FORMS[k],r={};
  d.f.forEach(([n,l,t])=>{const x=$('f_'+n).value;r[n]=t==='num'?(x===''?null:+x):x});
  if(k==='fixed'){const c={date:r.date||today(),category:r.category,amount:r.amount||0,memo:r.memo},o=id&&v.costs.find(x=>x.id===id);o?Object.assign(o,c):v.costs.push({id:uid(),...c,...ocrMeta()})}
  else{let rec=id&&v.records[k].find(x=>x.id===id),wasOn=rec&&rec.status==='装着中';
   if(rec)Object.assign(rec,r);else{rec={id:uid(),...r,source:'manual',attachments:[],lineItems:[],...ocrMeta()};if(k==='tire'){rec.pastDays=0;rec.pastKm=0}v.records[k].push(rec)}
+  if(k==='maintenance'&&rec.item==='オイル交換'&&rec.odo==null)rec.odo=v.odo||0;
   const dt=rec.date||rec.mountDate||today(),cc=v.costs.find(c=>c.ref===rec.id);
   if(rec.amount>0){const c={date:dt,category:d.cat,amount:rec.amount,memo:RT(rec,k),ref:rec.id};cc?Object.assign(cc,c):v.costs.push({id:uid(),...c})}
   else if(cc)v.costs=v.costs.filter(c=>c!==cc);
@@ -323,17 +325,18 @@ function applyRestore(t){try{const d=JSON.parse(t);if(!d||!Array.isArray(d.vehic
 function restore(i){const f=i.files[0];if(!f)return;const r=new FileReader();r.onload=()=>applyRestore(r.result);r.readAsText(f)}
 const sw=id=>{S.activeVehicleId=id;save();cl();render()};
 function ev(id){const x=S.vehicles.find(v=>v.id===id)||{};ph=x.photo||null;
- const F=[['name','車名','text',x.name],['model','型式','text',x.model],['year','年式','number',x.year],['odo','現在の走行距離(km)','number',x.odo],['shaken','車検満了日','date',x.shaken],['oil','オイル交換の目安(km)','number',x.oilInterval??5000]];
- sheet(`<h2>${id?'車の情報':'車を追加'}</h2>`+F.map(([k,l,t,val])=>`<label>${l}<input id=v_${k} type=${t} value="${e(val??'')}"></label>`).join('')+`<div class=lb>写真</div><input id=vp type=file accept="image/*" hidden onchange="pic(this,()=>$('vpl').textContent='写真を選びました')"><button class=ghost style="margin:6px 0 16px" onclick="$('vp').click()"><span id=vpl>${ph?'写真を変更する':'写真を選ぶ'}</span></button><p id=v_err class=sm style="color:var(--warn);margin:0"></p><button class=pri onclick="sv('${id||''}')">保存する</button>${id?`<button class=ghost style="width:100%;margin-top:18px;text-align:center;color:var(--warn)" onclick="dv('${id}')">この車を削除する</button>`:''}`)}
+ const F=[['name','車名','text',x.name],['model','型式','text',x.model],['year','年式','number',x.year],['odo','現在の走行距離(km)','number',x.odo],['shaken','車検満了日','date',x.shaken]];const oi=x.oilInterval??5000,OI=[3000,5000,7500,10000,15000];if(!OI.includes(oi))OI.push(oi);
+ sheet(`<h2>${id?'車の情報':'車を追加'}</h2>`+F.map(([k,l,t,val])=>`<label>${l}<input id=v_${k} type=${t} value="${e(val??'')}"></label>`).join('')+`<label>オイル交換の間隔(何kmごとに交換するか)<select id=v_oil>${OI.sort((a,b)=>a-b).map(n=>`<option value=${n} ${n===oi?'selected':''}>${num(n)}kmごと</option>`).join('')}</select><span class=sm style="display:block;margin-top:6px">車の説明書やお店で言われた間隔を選んでください。迷ったら5,000kmごと</span></label>
+<label>前回オイル交換したときの走行距離(km・分かれば)<input id=v_oilb type=number inputmode=numeric placeholder="例: 29400" value="${e(x.oilBaseOdo??x.lastOilOdo??'')}"><span class=sm style="display:block;margin-top:6px">入れると、ホームの「オイル交換まで」がすぐ正しく出ます</span></label><div class=lb>写真</div><input id=vp type=file accept="image/*" hidden onchange="pic(this,()=>$('vpl').textContent='写真を選びました')"><button class=ghost style="margin:6px 0 16px" onclick="$('vp').click()"><span id=vpl>${ph?'写真を変更する':'写真を選ぶ'}</span></button><p id=v_err class=sm style="color:var(--warn);margin:0"></p><button class=pri onclick="sv('${id||''}')">保存する</button>${id?`<button class=ghost style="width:100%;margin-top:18px;text-align:center;color:var(--warn)" onclick="dv('${id}')">この車を削除する</button>`:''}`)}
 function dv(id){const x=S.vehicles.find(v=>v.id===id);if(!x)return;ask(`「${x.name}」を削除しますか？`,'この車のすべての記録も消えます。元に戻せません',()=>{
  S.vehicles=S.vehicles.filter(v=>v.id!==id);if(S.activeVehicleId===id)S.activeVehicleId=S.vehicles[0]?S.vehicles[0].id:null;save();render()})}
 function pic(i,cb){const f=i.files[0];if(!f)return;const im=new Image();im.onload=()=>{const s=Math.min(1,720/im.width),c=document.createElement('canvas');c.width=im.width*s;c.height=im.height*s;c.getContext('2d').drawImage(im,0,0,c.width,c.height);ph=c.toDataURL('image/jpeg',.72);if(cb)cb()};im.src=URL.createObjectURL(f)}
 const hpic=i=>pic(i,()=>{cur().photo=ph;save();render()});
 function sv(id){const g=k=>$('v_'+k).value;if(!g('name').trim()){$('v_err').textContent='車名を入力してください';$('v_name').focus();return}
- const d={name:g('name').trim(),model:g('model'),year:g('year'),odo:+g('odo')||0,shaken:g('shaken'),oilInterval:+g('oil')||5000,photo:ph};
+ const d={name:g('name').trim(),model:g('model'),year:g('year'),odo:+g('odo')||0,shaken:g('shaken'),oilInterval:+g('oil')||5000,oilBaseOdo:g('oilb')===''?null:+g('oilb'),photo:ph};
  let v=S.vehicles.find(x=>x.id===id);
  if(v)Object.assign(v,d);else{v={id:uid(),lastOilOdo:null,records:{maintenance:[],tire:[],fuel:[],etc:[],custom:[],other:[]},costs:[],...d};S.vehicles.push(v)}
- S.activeVehicleId=v.id;save();cl();render()}
+ recalcOil(v);S.activeVehicleId=v.id;save();cl();render()}
 const PL={maintenance:'🔧 メンテナンス',fuel:'⛽ 給油',etc:'🛣️ 高速',custom:'✨ カスタム',other:'📝 記録',tire:'🛞 タイヤ'};
 function post(id){const v=cur();let r,k;for(const q in v.records){const f=v.records[q].find(x=>x.id===id);if(f){r=f;k=q}}
  const t=`${PL[k]}\n${v.name}：${RT(r,k)}\n${r.odo!=null?num(r.odo)+'km　':''}${r.date||''}\n#愛車 #${v.name.replace(/\s/g,'')}`;
